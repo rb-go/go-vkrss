@@ -88,7 +88,9 @@ func dataToRSS(data JSONBody) (string, error) {
 
 				photoLink := ""
 
-				if photo.Photo.Photo807 != "" {
+				if photo.Photo.Photo1280 != "" {
+					photoLink = photo.Photo.Photo1280
+				} else if photo.Photo.Photo807 != "" {
 					photoLink = photo.Photo.Photo807
 				} else if photo.Photo.Photo604 != "" {
 					photoLink = photo.Photo.Photo604
@@ -110,7 +112,19 @@ func dataToRSS(data JSONBody) (string, error) {
 
 		for _, video := range concreteData.Attachments {
 			if video.Type == "video" {
-				preparedContent += fmt.Sprintf("<p>🎬 %s</p>", video.Video.Title)
+
+				videoImage := ""
+				if video.Video.Photo800 != "" {
+					videoImage = video.Video.Photo800
+				} else if video.Video.Photo640 != "" {
+					videoImage = video.Video.Photo640
+				} else if video.Video.Photo320 != "" {
+					videoImage = video.Video.Photo320
+				} else if video.Video.Photo130 != "" {
+					videoImage = video.Video.Photo130
+				}
+
+				preparedContent += fmt.Sprintf("<p>🎬 %s<br><img src='%s'></p>", video.Video.Title, videoImage)
 			}
 		}
 

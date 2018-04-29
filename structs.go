@@ -76,6 +76,7 @@ type Attachment struct {
 		Photo130    string `json:"photo_130"`
 		Photo320    string `json:"photo_320"`
 		Photo640    string `json:"photo_640"`
+		Photo800    string `json:"photo_800"`
 		AccessKey   string `json:"access_key"`
 		Platform    string `json:"platform"`
 		CanAdd      int    `json:"can_add"`
@@ -90,6 +91,7 @@ type Attachment struct {
 		Photo130  string `json:"photo_130"`
 		Photo604  string `json:"photo_604"`
 		Photo807  string `json:"photo_807"`
+		Photo1280 string `json:"photo_1280"`
 		Width     int    `json:"width"`
 		Height    int    `json:"height"`
 		Text      string `json:"text"`
