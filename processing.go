@@ -10,7 +10,70 @@ import (
 
 	"github.com/go-resty/resty"
 	"github.com/gorilla/feeds"
+	"github.com/pkg/errors"
 )
+
+func getGroupDataFromVK() (title string, description string, image string, err error) {
+
+	token, domain, proxy := os.Getenv("VKRSS_ACCESS_TOKEN"),
+		os.Getenv("VKRSS_DOMAIN"),
+		os.Getenv("VKRSS_PROXY")
+
+	// Make query
+	params := make(map[string]string)
+
+	params["access_token"] = token
+	params["group_ids"] = domain
+	params["fields"] = "description"
+
+	params["lang"] = languageVK
+	params["v"] = apiVersion
+
+	client := resty.New()
+
+	if proxy != "" {
+		client = client.SetProxy(proxy)
+	}
+
+	resp, err := client.R().
+		SetQueryParams(params).
+		Get(vkURL + "groups.getById")
+
+	if err != nil {
+		log.Fatalln("[Error] VK::CallMethod:", err.Error(), "WebResponse:", string(resp.Body()))
+		return "", "", "", err
+	}
+
+	var body GroupData
+
+	if err := json.Unmarshal(resp.Body(), &body); err != nil {
+		log.Fatalln("[Error] VK::CallMethod:", err.Error(), "WebResponse:", string(resp.Body()))
+	}
+
+	if body.Error != nil {
+		if errorMsg, exists := body.Error["error_msg"].(string); exists {
+			log.Fatalln("[Error] VK::CallMethod:", errorMsg, "WebResponse:", string(resp.Body()))
+			return "", "", "", errors.New(errorMsg)
+		}
+
+		log.Fatalln("[Error] VK::CallMethod:", "Unknown error", "WebResponse:", string(resp.Body()))
+
+		return "", "", "", errors.New(resp.String())
+	}
+
+	title = body.Response[0].Name
+	description = body.Response[0].Description
+
+	if body.Response[0].Photo200 != "" {
+		image = body.Response[0].Photo200
+	} else if body.Response[0].Photo100 != "" {
+		image = body.Response[0].Photo100
+	} else if body.Response[0].Photo50 != "" {
+		image = body.Response[0].Photo50
+	}
+
+	return title, description, image, nil
+}
 
 func getDataFromVK() JSONBody {
 
@@ -66,9 +129,26 @@ func dataToRSS(data JSONBody) (string, error) {
 
 	now := time.Unix(int64(data.Response.Items[0].Date), 0)
 
+	title, description, image, err := getGroupDataFromVK()
+
+	if err != nil {
+		title = "error"
+		description = "vk wrong answer: " + err.Error()
+		log.Fatalln("[Error] VK::GroupData:", "Unknown error", "Err:", err)
+	}
+
 	feed := &feeds.Feed{
-		Link:    &feeds.Link{Href: "https://vk.com/" + os.Getenv("VKRSS_DOMAIN")},
-		Created: now,
+		Title:       title,
+		Link:        &feeds.Link{Href: "https://vk.com/" + os.Getenv("VKRSS_DOMAIN")},
+		Description: description,
+		Updated:     now,
+		Created:     now,
+		Copyright:   "riftbit.com",
+		Image: &feeds.Image{
+			Url:   image,
+			Title: title,
+			Link:  "https://vk.com/" + os.Getenv("VKRSS_DOMAIN"),
+		},
 	}
 
 	for _, element := range data.Response.Items {
@@ -147,7 +227,7 @@ func dataToRSS(data JSONBody) (string, error) {
 			Content:     preparedContent,
 		}
 
-		feed.Items = append(feed.Items, item)
+		feed.Add(item)
 
 	}
 
