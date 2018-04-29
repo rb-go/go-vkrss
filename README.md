@@ -7,3 +7,5 @@ Generate RSS Feed from VK Group wall [early beta]
  - **VKRSS_FILTER**
  - **VKRSS_COUNT**
  - **VKRSS_PROXY**
+
+Docker exposed port - 8888
