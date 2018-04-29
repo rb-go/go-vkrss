@@ -28,8 +28,8 @@ func getDataFromVK() JSONBody {
 	params["filter"] = filter
 	params["count"] = count
 
-	params["lang"] = "ru"
-	params["v"] = "5.74"
+	params["lang"] = languageVK
+	params["v"] = apiVersion
 
 	client := resty.New()
 

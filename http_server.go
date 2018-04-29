@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"errors"
+
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
@@ -28,12 +30,14 @@ func XMLHandler(ctx *routing.Context) error {
 
 	data := getDataFromVK()
 
-	res, err := dataToRSS(data)
-	if err != nil {
-		return err
+	if len(data.Response.Items) > 0 {
+		res, err := dataToRSS(data)
+		if err != nil {
+			return err
+		}
+		ctx.Response.SetBodyString(res)
+	} else {
+		return errors.New("something going wrong")
 	}
-
-	ctx.Response.SetBodyString(res)
-
 	return nil
 }
