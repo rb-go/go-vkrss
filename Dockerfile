@@ -2,7 +2,7 @@
 # STEP 1 build executable binary
 FROM golang:alpine as builder
 # Create appuser
-RUN adduser -D -g '' appuser
+RUN adduser -D -g '' appuser && apk update && apk add git
 COPY . $GOPATH/src/github.com/riftbit/vk2rss/
 WORKDIR $GOPATH/src/github.com/riftbit/vk2rss/
 #get dependancies
