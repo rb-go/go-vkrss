@@ -163,54 +163,62 @@ func dataToRSS(data JSONBody) (string, error) {
 
 		preparedContent := strings.Replace(concreteData.Text, "\n", "<br>", -1) + "<br>"
 
-		for _, photo := range concreteData.Attachments {
-			if photo.Type == "photo" {
+		if os.Getenv("VKRSS_NEED_IMAGES") != "" {
+			for _, photo := range concreteData.Attachments {
+				if photo.Type == "photo" {
 
-				photoLink := ""
+					photoLink := ""
 
-				if photo.Photo.Photo1280 != "" {
-					photoLink = photo.Photo.Photo1280
-				} else if photo.Photo.Photo807 != "" {
-					photoLink = photo.Photo.Photo807
-				} else if photo.Photo.Photo604 != "" {
-					photoLink = photo.Photo.Photo604
-				} else if photo.Photo.Photo130 != "" {
-					photoLink = photo.Photo.Photo130
-				}
+					if photo.Photo.Photo1280 != "" {
+						photoLink = photo.Photo.Photo1280
+					} else if photo.Photo.Photo807 != "" {
+						photoLink = photo.Photo.Photo807
+					} else if photo.Photo.Photo604 != "" {
+						photoLink = photo.Photo.Photo604
+					} else if photo.Photo.Photo130 != "" {
+						photoLink = photo.Photo.Photo130
+					}
 
-				if photoLink != "" {
-					preparedContent += "<p><img src='" + photoLink + "'></p>"
+					if photoLink != "" {
+						preparedContent += "<img src='" + photoLink + "'><br>"
+					}
 				}
 			}
 		}
 
-		for _, audio := range concreteData.Attachments {
-			if audio.Type == "audio" {
-				preparedContent += fmt.Sprintf("<p>🎧 %s</p>", audio.Audio.Artist+" - "+audio.Audio.Title)
-			}
-		}
-
-		for _, video := range concreteData.Attachments {
-			if video.Type == "video" {
-
-				videoImage := ""
-				if video.Video.Photo800 != "" {
-					videoImage = video.Video.Photo800
-				} else if video.Video.Photo640 != "" {
-					videoImage = video.Video.Photo640
-				} else if video.Video.Photo320 != "" {
-					videoImage = video.Video.Photo320
-				} else if video.Video.Photo130 != "" {
-					videoImage = video.Video.Photo130
+		if os.Getenv("VKRSS_NEED_AUDIOS") != "" {
+			for _, audio := range concreteData.Attachments {
+				if audio.Type == "audio" {
+					preparedContent += fmt.Sprintf("🎧 %s<br>", audio.Audio.Artist+" - "+audio.Audio.Title)
 				}
-
-				preparedContent += fmt.Sprintf("<p>🎬 %s<br><img src='%s'></p>", video.Video.Title, videoImage)
 			}
 		}
 
-		for _, doc := range concreteData.Attachments {
-			if doc.Type == "doc" {
-				preparedContent += fmt.Sprintf("<p>💾 <a href='%s'>%s</a></p>", doc.Doc.URL, doc.Doc.Title)
+		if os.Getenv("VKRSS_NEED_VIDEOS") != "" {
+			for _, video := range concreteData.Attachments {
+				if video.Type == "video" {
+
+					videoImage := ""
+					if video.Video.Photo800 != "" {
+						videoImage = video.Video.Photo800
+					} else if video.Video.Photo640 != "" {
+						videoImage = video.Video.Photo640
+					} else if video.Video.Photo320 != "" {
+						videoImage = video.Video.Photo320
+					} else if video.Video.Photo130 != "" {
+						videoImage = video.Video.Photo130
+					}
+
+					preparedContent += fmt.Sprintf("🎬 %s<br><img src='%s'><br>", video.Video.Title, videoImage)
+				}
+			}
+		}
+
+		if os.Getenv("VKRSS_NEED_DOCS") != "" {
+			for _, doc := range concreteData.Attachments {
+				if doc.Type == "doc" {
+					preparedContent += fmt.Sprintf("💾 <a href='%s'>%s</a><br>", doc.Doc.URL, doc.Doc.Title)
+				}
 			}
 		}
 
