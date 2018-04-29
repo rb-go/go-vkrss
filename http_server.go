@@ -3,41 +3,41 @@ package main
 import (
 	"log"
 
-	"errors"
-
-	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
 
 func startHTTPServer() {
 
-	router := routing.New()
-
-	router.Get("/", XMLHandler)
-
 	server := fasthttp.Server{
 		Name:    "VK2RSS By RiftBit",
-		Handler: router.HandleRequest,
+		Handler: XMLHandler,
 	}
 
 	log.Println("Started server on ", listenON)
 	log.Fatal(server.ListenAndServe(listenON))
 }
 
-func XMLHandler(ctx *routing.Context) error {
+func XMLHandler(ctx *fasthttp.RequestCtx) {
 
 	ctx.Response.Header.SetContentType("application/xml; charset=UTF-8")
 
 	data := getDataFromVK()
 
+	var res string
+	var err error
+
 	if len(data.Response.Items) > 0 {
-		res, err := dataToRSS(data)
+		res, err = dataToRSS(data)
 		if err != nil {
-			return err
+			ctx.Response.SetBodyString(err.Error())
+			ctx.SetStatusCode(500)
+			return
 		}
-		ctx.Response.SetBodyString(res)
 	} else {
-		return errors.New("something going wrong")
+		ctx.Response.SetBodyString("something going wrong")
+		ctx.SetStatusCode(500)
+		return
 	}
-	return nil
+
+	ctx.Response.SetBodyString(res)
 }
